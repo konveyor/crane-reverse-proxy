@@ -3,53 +3,55 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"os"
 
 	"github.com/gin-gonic/gin"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	migapi "github.com/konveyor/mig-controller/pkg/apis/migration/v1alpha1"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
-	k8sconfig "sigs.k8s.io/controller-runtime/pkg/client/config"
+	v1 "k8s.io/api/core/v1"
 )
 
+type Cluster struct {
+	Namespace string `json:"namespace,omitempty"`
+	Name      string `json:"name,omitempty"`
+}
+
 func main() {
-	scheme := runtime.NewScheme()
 
-	if err := migapi.AddToScheme(scheme); err != nil {
-		panic(err)
-	}
-	if err := v1.AddToScheme(scheme); err != nil {
+	config, err := rest.InClusterConfig()
+	if err != nil {
 		panic(err)
 	}
 
-	config := k8sconfig.GetConfigOrDie()
-
-	client, err := k8sclient.New(config, k8sclient.Options{Scheme: scheme})
+	client, err := client.New(config, client.Options{})
 	if err != nil {
 		panic(err)
 	}
 
 	r := gin.Default()
+	r.SetTrustedProxies(nil)
 
 	ref := types.NamespacedName{
 		Namespace: "openshift-migration",
-		Name:      "migration-controller",
+		Name:      "proxy",
 	}
 
-	controller := migapi.MigrationController{}
-
-	err = client.Get(context.TODO(), ref, &controller)
+	configmap := v1.ConfigMap{}
+	err = client.Get(context.TODO(), ref, &configmap)
 	if err != nil {
 		panic(err)
 	}
 
-	for _, cluster := range controller.Spec.Clusters {
+	clusters := []Cluster{}
+
+	json.Unmarshal([]byte(configmap.Data["clusters"]), &clusters)
+
+	for _, cluster := range clusters {
 		var remote *url.URL
 		var err error
 
@@ -59,7 +61,6 @@ func main() {
 		}
 
 		secret := v1.Secret{}
-
 		err = client.Get(context.TODO(), ref, &secret)
 		if err != nil {
 			panic(err)
@@ -82,5 +83,5 @@ func main() {
 
 	}
 
-	r.RunTLS(":8080", os.Getenv("TLSCrt"), os.Getenv("TLSKey"))
+	r.Run(":8080")
 }

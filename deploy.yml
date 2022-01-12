@@ -1,0 +1,132 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: proxy
+  namespace: openshift-migration
+data:
+  clusters: '[{"name": "roks", "namespace": "roks"}, {"name": "sno", "namespace": "montleon"}]'
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: proxy
+  namespace: openshift-migration
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: proxy
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: proxy
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: proxy
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: proxy
+subjects:
+- kind: ServiceAccount
+  name: proxy
+  namespace: openshift-migration
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: proxy
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: proxy
+subjects:
+- kind: ServiceAccount
+  name: proxy
+  namespace: openshift-migration
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy
+  namespace: openshift-migration
+  labels:
+    app: crane
+    service: proxy
+spec:
+  selector:
+     matchLabels:
+       app: crane
+       service: proxy
+  template:
+    metadata:
+      labels:
+        app: crane
+        service: proxy
+    spec:
+      containers:
+        - name: proxy
+          env:
+          - name: GIN_MODE
+            value: release 
+          image: quay.io/konveyor/crane-reverse-proxy
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+      serviceAccountName: proxy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxy
+  namespace: openshift-migration
+  labels:
+    app: crane
+    service: proxy
+spec:
+  ports:
+    - name: port-8080
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: crane
+    service: proxy
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+  name: proxy
+  namespace: openshift-migration
+  labels:
+    app: crane
+    service: proxy
+spec:
+  to:
+    kind: Service
+    name: proxy
+  port:
+    targetPort: port-8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
