@@ -4,9 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"k8s.io/apimachinery/pkg/types"
@@ -16,6 +18,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+const (
+	proxySecretName = "crane-proxy"
+)
+
 type Cluster struct {
 	Namespace string `json:"namespace,omitempty"`
 	Name      string `json:"name,omitempty"`
@@ -23,28 +29,33 @@ type Cluster struct {
 
 func main() {
 
+	namespace := os.Getenv("NAMESPACE")
+	if namespace == "" {
+		log.Fatalf("Please set the 'NAMESPACE' environment variable.")
+	}
+
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		panic(err)
+		log.Fatalf("Unable to retrieve in cluster kubeconfig.")
 	}
 
 	client, err := client.New(config, client.Options{})
 	if err != nil {
-		panic(err)
+		log.Fatalf("Unable to create kubernetes client.")
 	}
 
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
 
 	ref := types.NamespacedName{
-		Namespace: "openshift-migration",
-		Name:      "proxy",
+		Namespace: namespace,
+		Name:      proxySecretName,
 	}
 
 	configmap := v1.ConfigMap{}
 	err = client.Get(context.TODO(), ref, &configmap)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Unable to load ConfigMap: %s in Namespace: %s", proxySecretName, namespace)
 	}
 
 	clusters := []Cluster{}
@@ -63,12 +74,12 @@ func main() {
 		secret := v1.Secret{}
 		err = client.Get(context.TODO(), ref, &secret)
 		if err != nil {
-			panic(err)
+			log.Printf("Unable to retrieve secret %s in Namespace: %s. No proxy created for this clsuter.", cluster.Name, cluster.Namespace)
 		}
 
 		remote, err = url.Parse(string(secret.Data["url"]))
 		if err != nil {
-			panic(err)
+			log.Printf("No URL found in secret %s in Namespace: %s. No proxy created for this clsuter.", cluster.Name, cluster.Namespace)
 		}
 
 		r.Any("/"+cluster.Namespace+"/"+cluster.Name+"/*proxyPath", func(c *gin.Context) {
