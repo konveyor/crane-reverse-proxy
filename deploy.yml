@@ -5,7 +5,7 @@ metadata:
   name: crane-proxy
   namespace: openshift-migration
 data:
-  clusters: '[{"name": "roks", "namespace": "roks"}, {"name": "sno", "namespace": "montleon"}]'
+  clusters: '[]'
 ---
 apiVersion: v1
 kind: ServiceAccount
