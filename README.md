@@ -1,6 +1,7 @@
 # Reverse Proxy Proof of concept
 
 # Installation
+oc create -f rbac.yml
 oc create -f deploy.yml
 
 # Basic Usage
