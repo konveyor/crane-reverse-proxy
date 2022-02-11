@@ -3,6 +3,7 @@
 # Installation
 oc create -f rbac.yml
 oc create -f deploy.yml
+oc create -f dev-route.yml
 
 # Basic Usage
 - oc edit configmap -n openshift-migration crane-proxy

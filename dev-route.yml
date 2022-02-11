@@ -1,0 +1,19 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+  name: proxy
+  namespace: openshift-migration
+  labels:
+    app: crane
+    service: proxy
+spec:
+  to:
+    kind: Service
+    name: proxy
+  port:
+    targetPort: port-8443
+  tls:
+    termination: passthrough
+    insecureEdgeTerminationPolicy: Redirect
