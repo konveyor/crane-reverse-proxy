@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -72,7 +73,13 @@ func main() {
 		}
 	})
 
-	r.Run(":8080")
+	crt := os.Getenv("CRANE_PROXY_CRT")
+	key := os.Getenv("CRANE_PROXY_KEY")
+	if crt == "" || key == "" {
+		log.Fatalf("Export CRANE_PROXY_CRT and CRANE_PROXY_KEY before running.")
+	}
+
+	r.RunTLS(":8443", crt, key)
 }
 
 func getClusterURL(client client.Client, gocache *cache.Cache, namespace string, name string) *url.URL {
