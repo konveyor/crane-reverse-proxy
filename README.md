@@ -2,9 +2,7 @@
 
 # Installation
 ```
-oc create -f rbac.yml
-oc create -f deploy.yml
-oc create -f dev-route.yml
+oc kustomize github.com/konveyor/crane-reverse-proxy/config/dev | oc apply -f - 
 ```
 
 # Basic Usage

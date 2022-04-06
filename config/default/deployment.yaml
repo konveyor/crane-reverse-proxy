@@ -1,4 +1,3 @@
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -45,23 +44,3 @@ spec:
         secret:
           defaultMode: 256
           secretName: crane-reverse-proxy-certs
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: proxy
-  namespace: openshift-migration
-  annotations:
-    service.beta.openshift.io/serving-cert-secret-name: crane-reverse-proxy-certs
-  labels:
-    app: crane
-    service: proxy
-spec:
-  ports:
-    - name: port-8443
-      port: 8443
-      targetPort: 8443
-      protocol: TCP
-  selector:
-    app: crane
-    service: proxy
