@@ -13,6 +13,7 @@ require (
 	github.com/ugorji/go v1.2.6 // indirect
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43 // indirect
 	golang.org/x/sys v0.0.0-20210820121016-41cdb8703e55 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	k8s.io/api v0.22.1
 	k8s.io/apimachinery v0.22.1
