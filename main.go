@@ -72,7 +72,7 @@ func main() {
 			proxy.FlushInterval = 0
 			c.Request.URL.Path, _ = c.Params.Get("proxyPath")
 			c.Request.Host = url.Host
-			c.Request.Header.Del("origin")
+
 			proxy.ServeHTTP(c.Writer, c.Request)
 
 			if c.Writer.Status() >= http.StatusBadRequest {
