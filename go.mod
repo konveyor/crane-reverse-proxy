@@ -3,7 +3,6 @@ module github.com/jmontleon/reverse-proxy-poc
 go 1.16
 
 require (
-	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.8.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect

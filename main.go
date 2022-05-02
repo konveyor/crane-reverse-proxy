@@ -10,7 +10,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/patrickmn/go-cache"
 	v1 "k8s.io/api/core/v1"
@@ -43,14 +42,6 @@ func main() {
 
 	r := gin.Default()
 	r.SetTrustedProxies(nil)
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Accept", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
 
 	r.Any("/:namespace/:name/*proxyPath", func(c *gin.Context) {
 		var proxy *httputil.ReverseProxy
