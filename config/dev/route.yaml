@@ -3,7 +3,7 @@ kind: Route
 metadata:
   annotations:
   name: proxy
-  namespace: openshift-migration
+  namespace: openshift-migration-toolkit
   labels:
     app: crane
     service: proxy
