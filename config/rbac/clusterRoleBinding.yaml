@@ -9,4 +9,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: proxy
-    namespace: openshift-migration
+    namespace: openshift-migration-toolkit
