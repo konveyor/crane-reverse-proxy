@@ -18,26 +18,35 @@ spec:
         service: proxy
     spec:
       containers:
-        - name: proxy
-          env:
-          - name: GIN_MODE
-            value: release
-          - name: NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: CRANE_PROXY_CRT
-            value: /certs/tls.crt
-          - name: CRANE_PROXY_KEY
-            value: /certs/tls.key
-          volumeMounts:
-          - mountPath: /certs
-            name: crane-reverse-proxy-certs
-          image: quay.io/konveyor/crane-reverse-proxy
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8443
-              protocol: TCP
+      - name: proxy
+        env:
+        - name: GIN_MODE
+          value: release
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CRANE_PROXY_CRT
+          value: /certs/tls.crt
+        - name: CRANE_PROXY_KEY
+          value: /certs/tls.key
+        volumeMounts:
+        - mountPath: /certs
+          name: crane-reverse-proxy-certs
+        image: quay.io/konveyor/crane-reverse-proxy
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8443
+            protocol: TCP
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: proxy
       volumes:
       - name: crane-reverse-proxy-certs
